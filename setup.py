@@ -4,7 +4,8 @@ from setuptools import setup
 import yaml
 
 def readme():
-    return ''
+    with open('README.md', 'r') as f:
+        return f.readlines()
 
 with open('setup.yml', 'r') as f:
     cfg = yaml.load(f)
