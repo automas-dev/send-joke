@@ -15,7 +15,7 @@ def load_config(path='config.yml'):
 
 def get_joke(cfg):
     r = requests.get(cfg['url'], headers=cfg['headers'])
-    return r.text
+    return r.content.decode('utf-8', errors='replace')
 
 def send_mail(srv, mail, message):
     context = ssl.create_default_context()
@@ -23,7 +23,7 @@ def send_mail(srv, mail, message):
     with smtplib.SMTP_SSL(srv['address'], srv['port'], context=context) as server:
         server.login(srv['user'], srv['password'])
 
-        msg = MIMEText(message, 'html', 'utf8')
+        msg = MIMEText(message.encode('utf8'), 'html', 'utf8')
         msg['from'] = mail['email']
         msg['subject'] = Header(mail["subject"], 'utf8')
         
