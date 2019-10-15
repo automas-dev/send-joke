@@ -22,7 +22,10 @@ with open(CONFIG_FILE, 'r') as f:
     subject_line = config['subject_line']
 
 with open(MAIL_LIST_FILE, 'r') as f:
-    mail_list = [line.strip() for line in f if len(line.strip()) > 0]
+    mail_list = filter(lambda l: len(l) > 0,
+                       map(lambda l: l.strip(),
+                           f))
+   list(mail_list) 
 
 
 def log_joke(joke):
@@ -60,4 +63,3 @@ with smtplib.SMTP_SSL(address, port, context=context) as server:
         msg['subject'] = Header(subject_line, 'utf8')
         msg['to'] = to
         server.sendmail(msg['from'], to, msg.as_string())
-
