@@ -7,36 +7,57 @@ from email.header import Header
 import ssl
 import requests
 import datetime
-import yaml
+import json
 
-def load_config(path='config.yml'):
-    with open(path, 'r') as f:
-        return yaml.load(f)
 
-def get_joke(cfg):
-    r = requests.get(cfg['url'], headers=cfg['headers'])
-    return r.content.decode('utf-8', errors='replace')
+CONFIG_FILE = 'config.json'
+MAIL_LIST_FILE = 'mail_list.txt'
+LOG_FILE = 'joke_log.txt'
 
-def send_mail(srv, mail, message):
-    context = ssl.create_default_context()
+with open(CONFIG_FILE, 'r') as f:
+    config = json.load(f)
+    mail_server = config['mail_server']
+    joke_server = config['joke_server']
+    from_address = config['from_address']
+    subject_line = config['subject_line']
 
-    with smtplib.SMTP_SSL(srv['address'], srv['port'], context=context) as server:
-        server.login(srv['user'], srv['password'])
+with open(MAIL_LIST_FILE, 'r') as f:
+    mail_list = [line.strip() for line in f if len(line.strip()) > 0]
 
-        msg = MIMEText(message.encode('utf8'), 'html', 'utf8')
-        msg['from'] = mail['email']
-        msg['subject'] = Header(mail["subject"], 'utf8')
-        
-        for to in mail['to']:
-            msg['to'] = to
-            server.sendmail(msg['from'], to, msg.as_string())
 
-if __name__ == '__main__':
-    cfg = load_config()
-    joke = get_joke(cfg['joke'])
-    send_mail(cfg['server'], cfg['mail'], joke)
-    
-    with open('joke_log.txt', 'a') as f:
+def log_joke(joke):
+    with open(LOG_FILE, 'a') as f:
         now = datetime.datetime.now()
-        print(now.isoformat(), joke, file=f)
+        f.write(now.isoformat())
+        f.write(' ' + joke + '\n')
+
+
+def get_joke(url, headers):
+    resp = requests.get(url, headers=headers)
+    joke = resp.content.decode('utf-8', errors='replace')
+    log_joke(joke)
+    return joke
+
+
+joke = get_joke(joke_server['url'], joke_server['headers'])
+print('Get Joke:', joke)
+
+context = ssl.create_default_context()
+address = mail_server['address']
+port = mail_server['port']
+username = mail_server['username']
+password = mail_server['password']
+
+print('Connecting to mail server')
+with smtplib.SMTP_SSL(address, port, context=context) as server:
+    server.login(username, password)
+    print('Logged in successful')
+
+    for to in mail_list:
+        print('Sending to', to)
+        msg = MIMEText(joke.encode('utf8'), 'html', 'utf8')
+        msg['from'] = from_address
+        msg['subject'] = Header(subject_line, 'utf8')
+        msg['to'] = to
+        server.sendmail(msg['from'], to, msg.as_string())
 
