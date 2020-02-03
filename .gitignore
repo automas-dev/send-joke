@@ -9,3 +9,4 @@ __pycache__/
 joke_log.txt
 config.json
 mail_list.txt
+joke_log.json

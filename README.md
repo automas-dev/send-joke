@@ -20,6 +20,7 @@ Configurations are stored in the `config.json` file. The fields are:
     joke_server {
         url : string : the address to fech a plain text joke
         headers : object : the http headers to send with the GET request
+        attempts : integer : the maximum number of tries to find a unique joke
     },
     from_address : string : the email address that will appear as the sender
     subject_line : string : the subject line of the email
@@ -27,7 +28,7 @@ Configurations are stored in the `config.json` file. The fields are:
 
 Some example headers would be:
 
-    Accept: text/plian
+    Accept: application/json
     Accept-Charset: utf-8
     
 
