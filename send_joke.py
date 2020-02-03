@@ -87,7 +87,8 @@ def build_message(joke):
     if 'message' in config:
         text += config['message'] + '<br/><br/>\n'
 
-    text += in_tags('div', joke, 'class="joke"')
+    #text += in_tags('div', joke, 'class="joke"')
+    text += joke
 
     return body_template % text
 
