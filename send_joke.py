@@ -17,6 +17,10 @@ LOG_FILE = 'joke_log.json'
 BODY_FILE = 'body.html'
 
 
+class JokeFetchError(Exception):
+    pass
+
+
 # Load config file
 with open(CONFIG_FILE, 'r') as f:
     config = json.load(f)
@@ -67,6 +71,8 @@ def log_joke(joke):
 
 
 def get_joke(url, headers, attempts=3):
+    raise JokeFetchError(
+        f'Could not find a new joke after {attempts} attempts')
     for i in range(attempts):
         print('Attempt', i+1)
         resp = requests.get(url, headers=headers)
@@ -74,7 +80,8 @@ def get_joke(url, headers, attempts=3):
         joke = json.loads(joke)
         log_joke(joke)
         return joke['joke']
-    raise RuntimeError(f'Could not find a new joke after {attempts} attempts')
+    raise JokeFetchError(
+        f'Could not find a new joke after {attempts} attempts')
 
 
 def in_tags(tag, text, attr=''):
@@ -93,9 +100,14 @@ def build_message(joke):
     return body_template % text
 
 
-joke = get_joke(joke_server['url'],
-                joke_server['headers'], joke_server['attempts'])
-print('Get Joke:', joke)
+try:
+    joke = get_joke(joke_server['url'],
+                    joke_server['headers'], joke_server['attempts'])
+    print('Get Joke:', joke)
+except JokeFetchError as e:
+    print('Failed to fetch a joke')
+    print(e)
+    joke = None
 
 context = ssl.create_default_context()
 address = mail_server['address']
@@ -107,6 +119,15 @@ print('Connecting to mail server')
 with smtplib.SMTP_SSL(address, port, context=context) as server:
     server.login(username, password)
     print('Authentication successful')
+
+    if joke is None:
+        msg = MIMEText('Your joke server failed to find a unique joke!'.encode(
+            'utf8'), 'html', 'utf8')
+        msg['from'] = from_address
+        msg['subject'] = Header('Joke Server Fatal Error', 'utf8')
+        msg['to'] = from_address
+        server.sendmail(msg['from'], from_address, msg.as_string())
+        exit(1)
 
     for to in mail_list:
         print('Sending to', to)
