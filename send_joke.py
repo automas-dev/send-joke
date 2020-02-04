@@ -71,8 +71,6 @@ def log_joke(joke):
 
 
 def get_joke(url, headers, attempts=3):
-    raise JokeFetchError(
-        f'Could not find a new joke after {attempts} attempts')
     for i in range(attempts):
         print('Attempt', i+1)
         resp = requests.get(url, headers=headers)
