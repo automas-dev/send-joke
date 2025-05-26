@@ -1,7 +1,7 @@
 name: send_joke
 version: 1.1
 author: Thomas Harrison
-author_email: twh2898@vt.edu
+author_email: theharrisoncrafter@gmail.com
 description: Send a joke to a friend
 classifiers:
     - "Development Status :: 3 - Alpha"
